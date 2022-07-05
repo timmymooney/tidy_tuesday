@@ -1,0 +1,39 @@
+# Loading in the packages
+
+library(tidyverse)
+library(ggplot2)
+library(tidytuesdayR)
+library(dplyr)
+
+# Loading in the data
+
+rent_data <- tidytuesdayR::tt_load(2022, week = 27)
+
+rent_data <- rent_data$rent %>% 
+  tibble()
+
+
+# Plot
+
+jitter_plot <- ggplot(rent_data, aes(x = year, y = price, fill = beds)) +
+  geom_point(shape = 21, colour = "red", fill = "black", alpha = 0.5, position = "jitter") +
+  geom_smooth(colour = "red") +
+  labs(title = "Rent prices in San Francisco each year", subtitle = "Looking at how rent prices in San Francisco have changed since the milenium", x = "Year", y = "Rent Price", fill = "Bedrooms") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  theme(legend.position = "none") +
+  scale_y_continuous("Rent Price", 
+                     breaks = scales::breaks_extended(10),
+                     labels = scales::label_dollar()) +
+  scale_x_continuous("Year", 
+                     breaks = scales::breaks_extended(15))
+jitter_plot 
+
+ggsave(
+  paste0("~/documents/Tidy_Tuesday_Rent", format(Sys.time(), "%d%m%Y"), ".png"),
+  dpi = 320,
+  height = 6,
+  width = 9,
+  bg = "white"
+)
+
