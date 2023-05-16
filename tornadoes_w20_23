@@ -1,0 +1,75 @@
+```{r}
+library(tidyverse)
+library(tidytuesdayR)
+library(maps)
+library(mapproj)
+library(grid)
+library(tidyverse)
+```
+
+load in the data and wrangle
+```{r}
+# load in data and change some col names for ease
+tornados <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-16/tornados.csv') %>% 
+  dplyr::rename(state = st,
+         tornado_number = om,
+         timezone = tz) 
+# add column with full state name 
+tornados$state_name <- state.name[match(tornados$state, state.abb)]
+
+# add count per state if needed
+tornados <- tornados %>% 
+  mutate(state_name = tolower(state_name)) %>% 
+  group_by(state_name) %>% 
+  add_count()
+
+# get the map data for America
+map_data <- map_data("world", region = "USA")
+
+# get the state boundaries
+state_data <- map_data("state") %>% 
+  rename(state_name = region) %>% 
+  select(long, lat, state_name, group)
+
+state_lables <- state_data %>% 
+  LimpiaR::limpiar_duplicates(state_name)
+state_lables$state_abb <- state.abb[match(state_lables$state_name, state.name)]
+
+# set latitude and longitude limits for the map
+xlim <- c(-125, -65)
+ylim <- c(25, 50)
+
+# plot the map with state boundaries and tornadoes magnitude 5
+tornados <- tornados %>% 
+  filter(mag %in% c(5))
+```
+
+plot
+```{r}
+ggplot() +
+  geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+               fill = "beige", color = "black") +
+  geom_point(data = tornados, aes(x = slon, y = slat, size = mag),
+             shape = 21, fill = "darkorange2", color = "black", alpha = 0.9) +
+  geom_polygon(data = state_data, aes(x = long, y = lat, group = state_name, fill = NULL),
+               color = "black", alpha = 0.05) +
+  coord_map(xlim = xlim, ylim = ylim) +
+      geom_text(data = tornados, aes(x = slon, y = slat, label = state),
+            color = "black", size = 2.0, nudge_y = 0.01) +
+  labs(title = "Tornadoes with Magnitude of 5, by State between 1950 - 2022",
+       subtitle = " Oklahoma, Alabama, Texas, Kansas and Iowa have the highest number of\n recorded magnitude 5 tornadoes, with Oklahoma having 8 on record.",
+       caption = "Tidytuesday Week-20 2023 by @TimMooneyShare
+      Data from NOAA's National Weather Service Storm Prediction Center") +
+  #scale_fill_gradient(low = "yellow", high = "red", na.value = "gray",
+  #                    name = "Tornado Count") +
+  theme_void() +
+  theme(plot.title = element_text(colour = "darkorange2", size = 17),
+    plot.subtitle = element_text(colour = "beige", size = 12),
+    plot.caption = element_text(colour = "darkorange2")) +
+    theme(legend.position = "na")
+ggsave(filename = "tidytuesday_week20_2023.png", 
+       path = "~/Documents/tidy_tuesday_viz/",
+       bg = "black",
+       height = 6,
+       width = 10)
+```
