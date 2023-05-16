@@ -56,7 +56,7 @@ ggplot() +
   coord_map(xlim = xlim, ylim = ylim) +
       geom_text(data = tornados, aes(x = slon, y = slat, label = state),
             color = "black", size = 2.0, nudge_y = 0.01) +
-  labs(title = "Tornadoes with Magnitude of 5, by State between 1950 - 2022",
+  labs(title = "Magnitude 5 Tornadoes in The USA between 1950-2022",
        subtitle = " Oklahoma, Alabama, Texas, Kansas and Iowa have the highest number of\n recorded magnitude 5 tornadoes, with Oklahoma having 8 on record.",
        caption = "Tidytuesday Week-20 2023 by @TimMooneyShare
       Data from NOAA's National Weather Service Storm Prediction Center") +
