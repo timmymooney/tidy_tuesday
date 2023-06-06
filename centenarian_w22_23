@@ -1,0 +1,59 @@
+package library
+```{r}
+library(tidyverse)
+library(tidytuesdayR)
+library(patchwork)
+```
+
+load in the data and wrangle
+```{r}
+centenarians <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-30/centenarians.csv') %>%
+  mutate(gender = str_to_title(gender),
+         age_rounded = round(x = age, digits = 0))
+
+centenarians$still_alive <- centenarians$still_alive %>% 
+  str_replace_all(pattern = "alive", replacement = "TRUE") %>% 
+  str_replace_all(pattern = "deceased", replacement = "FALSE") 
+
+centenarians$still_alive <- as.logical(x = centenarians$still_alive)
+```
+
+define colour map and plot
+```{r}
+colour_mapping = c("Female" = "#FFC0CB",
+                   "Male" = "#1AA7EC")
+
+p1 <- centenarians %>%
+  ggplot(aes(x = gender, y = age, fill = gender)) +
+  geom_violin(trim = FALSE) +
+    labs(title = "Centenarian Women Significantly Outlive Men", subtitle = "Maria Branyas has a way to go until surpassing the oldest woman to ever live, while Juan Vicente Perez has ~2 years to be the worlds oldest male.", y = "Age", x = "Gender") +
+  geom_text(data = centenarians %>% filter(still_alive),
+            aes(label = paste(name, " - ", age_rounded, sep = "")), vjust = 0, check_overlap = TRUE) +
+  scale_fill_manual(values = colour_mapping) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = "none",
+        title = element_text(size = 12))
+
+p2 <- centenarians %>%
+  ggplot(aes(x = death_date, y = age, color = gender)) +
+  geom_point(size = 2) +
+  labs(x = "Date of Death", y = "", title = "",
+       caption = "Tidytuesday Week-22 2023 by @TimMooneyShare
+      Data from Wikipedia list of the verified oldest people") +
+  scale_color_manual(values = colour_mapping) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y.right = element_text(color = "black"), 
+        axis.title.y.right = element_text(color = "black", face = "bold", hjust = 1), 
+        axis.line.y.right = element_line(color = "black")) +
+  guides(color = guide_legend(reverse = TRUE)) 
+
+
+p1 + p2 
+ggsave(filename = "tidytuesday_week22.png", path = "~/Documents/tidy_tuesday_viz/", width = 12, height = 6, bg = "beige")
+
+```
