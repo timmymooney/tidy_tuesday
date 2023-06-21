@@ -1,0 +1,49 @@
+```{r}
+library(tidytuesdayR)
+library(tidyverse)
+library(countrycode)
+library(ggimage)
+```
+
+data
+```{r}
+energy_use <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-06-06/owid-energy.csv') %>% 
+  janitor::clean_names()
+
+```
+
+wrangling
+```{r}
+# filter for a selection of oil states
+years_25 <- energy_use %>% 
+  dplyr::filter(country %in% c("Saudi Arabia", "Russia", "United States", "Iran", "China", "Canada", "Iraq", "United Arab Emirates", "Kuwait", "Brazil")) %>% 
+  dplyr::filter(year > 1995)  %>%  # filter for the last 25 years of data 
+  dplyr::select(country, year, population, gdp, oil_consumption, oil_production) %>% 
+  dplyr::group_by(country) %>% 
+  dplyr::mutate(mean_oil_consumption = mean(oil_consumption),
+                mean_oil_production = mean(oil_production))
+years_25$oil_difference <- years_25$mean_oil_production - years_25$mean_oil_consumption # produce difference in oil consumption
+
+years_25$country_code <- countrycode::countrycode(years_25$country, "country.name", "iso2c") # add country code
+```
+
+plotting
+```{r}
+ggplot2::ggplot(years_25, ggplot2::aes(x = oil_difference, y = country)) +
+  ggplot2::geom_segment(ggplot2::aes(x = mean_oil_consumption, xend = oil_difference, yend = country),
+               color = "white", size = 0.5) +
+  ggplot2::geom_point(color = "grey", size = 3) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "grey") +
+  ggimage::geom_flag(aes(image = country_code)) +
+  ggplot2::labs(x = "25 Years of Oil Production/Consumption", y = "",
+       title = "25 Years of Oil Production & Consumption by Country", 
+       subtitle = "While America are known to produce the most oil, it shows that in the last 25 years they have also\nreported the largest oil deficit due to consumption", caption = "Tidytuesday Week-23 2023 by @TimMooneyShare
+      Data from OWID") +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(panel.grid = ggplot2::element_blank(),
+                 text = element_text(family = "serif"),
+                 title = element_text(size = 17),
+                 axis.text.y = element_text(size = 10),
+                 axis.text.x = element_text(size = 7))
+ggsave(filename = "tidytuesday_week23_2023.png", path = "~/Documents/tidy_tuesday_viz/", width = 12, height = 8, bg = "white")
+```
