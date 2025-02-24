@@ -1,1 +1,1 @@
-## A repo containing any Tidy Tuesday submissions
+A repo containing any Tidy Tuesday submissions
