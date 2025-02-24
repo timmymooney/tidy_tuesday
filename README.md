@@ -1,1 +1,1 @@
-## Tidy Tuesday submissions from years 2022 and 2023
+## A repo containing any Tidy Tuesday submissions
